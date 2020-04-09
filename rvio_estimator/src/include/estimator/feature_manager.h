@@ -23,7 +23,7 @@ using namespace Eigen;
 #include <ros/assert.h>
 
 #include "parameters.h"
-#include "../utility/tic_toc.h"
+#include "utility/tic_toc.h"
 
 class FeaturePerFrame
 {

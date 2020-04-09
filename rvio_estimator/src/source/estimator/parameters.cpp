@@ -7,7 +7,7 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#include "parameters.h"
+#include "estimator/parameters.h"
 
 double INIT_DEPTH;
 double MIN_PARALLAX;

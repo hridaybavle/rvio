@@ -7,6 +7,10 @@ set(CMAKE_CXX_FLAGS "-std=c++11")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -g")
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
+set(rvio_header_dir
+    src/include
+    )
+
 find_package(catkin REQUIRED COMPONENTS
     roscpp
     std_msgs
@@ -20,35 +24,25 @@ find_package(catkin REQUIRED COMPONENTS
 find_package(OpenCV REQUIRED)
 find_package(G2O REQUIRED)
 
+message("PROJECT_SOURCE" ${PROJECT_SOURCE_DIR})
+
 FILE(GLOB_RECURSE rvio_source_files
     ${PROJECT_SOURCE_DIR}/src/source/*.cpp
+    ${PROJECT_SOURCE_DIR}/src/source/estimator/*.cpp
+    ${PROJECT_SOURCE_DIR}/src/source/featureTracker/*.cpp
+    ${PROJECT_SOURCE_DIR}/src/source/utility/*.cpp	
     )
 
 FILE(GLOB_RECURSE rvio_header_files
-    ${PROJECT_SOURCE_DIR}/src/source/*.h
+    ${PROJECT_SOURCE_DIR}/src/include/*.h
+    ${PROJECT_SOURCE_DIR}/src/include/featureTracker/*.h
+    ${PROJECT_SOURCE_DIR}/src/source/estimator/*.h
+    ${PROJECT_SOURCE_DIR}/src/source/utility/*.h
     )
 
 find_package(Eigen3)
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-  ${EIGEN3_INCLUDE_DIR}
-  ${rvio_header_files}
-  #SYSTEM PUBLIC
-  #${G2O_INCLUDE_DIR}	
-)
 
-add_library(rvio_lib ${rvio_source_files})
-target_link_libraries(rvio_lib 
-		      ${catkin_LIBRARIES} 
-		      ${OpenCV_LIBS}
-		      ${Eigen_INCLUDE_DIRS}
-		      ${G2O_CORE_LIBRARY}
-                      ${G2O_STUFF_LIBRARY}
-		      #${G2O_SOLVER_CHOLMOD}
-		      )
-
-
-catkin_package(INCLUDE_DIRS src
+catkin_package(INCLUDE_DIRS ${rvio_header_dir}
   LIBRARIES rvio_lib
   CATKIN_DEPENDS roscpp
   std_msgs
@@ -58,6 +52,25 @@ catkin_package(INCLUDE_DIRS src
   cv_bridge
   camera_models
   image_transport)
+
+
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
+  ${rvio_header_dir}
+  #SYSTEM PUBLIC
+  #${G2O_INCLUDE_DIR}
+)
+
+add_library(rvio_lib ${rvio_source_files} ${rvio_header_files})
+target_link_libraries(rvio_lib 
+		      ${catkin_LIBRARIES} 
+		      ${OpenCV_LIBS}
+		      ${Eigen_INCLUDE_DIRS}
+		      ${G2O_CORE_LIBRARY}
+                      ${G2O_STUFF_LIBRARY}
+		      #${G2O_SOLVER_CHOLMOD}
+		      )
 
 add_executable(${PROJECT_NAME}_node ${PROJECT_SOURCE_DIR}/src/rvio_node.cpp)
 target_link_libraries(${PROJECT_NAME}_node rvio_lib)
