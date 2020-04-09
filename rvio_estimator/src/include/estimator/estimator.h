@@ -20,15 +20,19 @@ public:
   void initEstimator();
   void inputImages(double t, const cv::Mat& img0, const cv::Mat img1);
   void setParameters();
+  void inputIMU(double t, const Eigen::Vector3d linear_acc, const Eigen::Vector3d ang_vel);
 
 protected:
   FeatureTracker feature_tracker_obj_;
   FeatureManager feature_manager_;
 
   std::thread process_thread_;
-  std::queue<pair<double, map<int, vector<pair<int, Eigen::Matrix<double, 7, 1> > > > > > feature_buf_;
-  std::mutex img_buf_lock_;
+  std::mutex buf_lock_;
   std::mutex process_lock_;
+
+  std::queue<pair<double, map<int, vector<pair<int, Eigen::Matrix<double, 7, 1> > > > > > feature_buf_;
+  std::queue<std::pair<double, Eigen::Vector3d>> acc_buf_;
+  std::queue<std::pair<double, Eigen::Vector3d>> ang_vel_buf_;
 
   //config params
 private:
@@ -36,13 +40,27 @@ private:
   Eigen::Vector3d g_;
 
 private:
- Eigen::Matrix3d Rs[(WINDOW_SIZE + 1)];
 
- Matrix3d ric[2];
- Vector3d tic[2];
+  Eigen::Vector3d        Ps[(WINDOW_SIZE + 1)];
+  Eigen::Vector3d        Vs[(WINDOW_SIZE + 1)];
+  Eigen::Matrix3d        Rs[(WINDOW_SIZE + 1)];
+  Eigen::Vector3d        Bas[(WINDOW_SIZE + 1)];
+  Eigen::Vector3d        Bgs[(WINDOW_SIZE + 1)];
+
+
+  Matrix3d ric[2];
+  Vector3d tic[2];
+
 
 private:
+  bool IMUAvailable(double t);
   void processMeasurements();
+  bool getIMUInterval(double t0, double t1, std::vector<pair<double, Eigen::Vector3d>> &acc_vector,
+                      std::vector<pair<double, Eigen::Vector3d>> &ang_vel_vector);
+  void initFirstIMUPose(std::vector<pair<double, Eigen::Vector3d>> &acc_vector);
+
   int input_img_cnt_;
+  double prev_time, cur_time;
+  bool init_first_pose_flag_;
 
 };

@@ -5,6 +5,7 @@
 
 #include "ros/ros.h"
 #include "sensor_msgs/Image.h"
+#include "sensor_msgs/Imu.h"
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/opencv.hpp>
 
@@ -26,14 +27,14 @@ public:
   estimator estimator_obj_;
 
 protected:
-  ros::Subscriber img1_sub_, img2_sub_;
+  ros::Subscriber img1_sub_, img2_sub_, imu_sub_;
   void img1Callback(const sensor_msgs::ImageConstPtr& img_msg);
   void img2Callback(const sensor_msgs::ImageConstPtr& img_msg);
+  void imuCallback(const sensor_msgs::ImuConstPtr& imu_msg);
 
   std::mutex img_buf_lock_;
   std::queue<sensor_msgs::ImageConstPtr> img0_buf_;
   std::queue<sensor_msgs::ImageConstPtr> img1_buf_;
-
 };
 
 cv::Mat rvio_ros_node::getImageFromMsg(const sensor_msgs::ImageConstPtr &img_msg)
@@ -62,6 +63,7 @@ void rvio_ros_node::open(ros::NodeHandle n)
 {
   estimator_obj_.initEstimator();
 
+  imu_sub_  = n.subscribe("/d435/camera/imu", 2000, &rvio_ros_node::imuCallback, this, ros::TransportHints().tcpNoDelay());
   img1_sub_ = n.subscribe("/d435/camera/infra1/image_rect_raw", 100, &rvio_ros_node::img1Callback, this);
   img2_sub_ = n.subscribe("/d435/camera/infra2/image_rect_raw", 100, &rvio_ros_node::img2Callback, this);
 }
@@ -83,6 +85,22 @@ void rvio_ros_node::img2Callback(const sensor_msgs::ImageConstPtr &img_msg)
 
   return;
 }
+
+void rvio_ros_node::imuCallback(const sensor_msgs::ImuConstPtr &imu_msg)
+{
+  double t = imu_msg->header.stamp.toSec();
+  double dx = imu_msg->linear_acceleration.x;
+  double dy = imu_msg->linear_acceleration.y;
+  double dz = imu_msg->linear_acceleration.z;
+  double rx = imu_msg->angular_velocity.x;
+  double ry = imu_msg->angular_velocity.y;
+  double rz = imu_msg->angular_velocity.z;
+
+  Eigen::Vector3d acc(dx, dy, dz);
+  Eigen::Vector3d gyr(rx, ry, rz);
+  estimator_obj_.inputIMU(t, acc, gyr);
+}
+
 
 void rvio_ros_node::processImages()
 {
