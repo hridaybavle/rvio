@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>rvio</name>
+  <name>rvio_estimator</name>
   <version>0.0.0</version>
   <description>The rvio package</description>
 
