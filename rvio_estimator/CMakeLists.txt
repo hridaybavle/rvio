@@ -24,20 +24,14 @@ find_package(catkin REQUIRED COMPONENTS
 find_package(OpenCV REQUIRED)
 find_package(G2O REQUIRED)
 
-message("PROJECT_SOURCE" ${PROJECT_SOURCE_DIR})
-
 FILE(GLOB_RECURSE rvio_source_files
     ${PROJECT_SOURCE_DIR}/src/source/*.cpp
-    ${PROJECT_SOURCE_DIR}/src/source/estimator/*.cpp
-    ${PROJECT_SOURCE_DIR}/src/source/featureTracker/*.cpp
-    ${PROJECT_SOURCE_DIR}/src/source/utility/*.cpp	
+	
     )
 
 FILE(GLOB_RECURSE rvio_header_files
     ${PROJECT_SOURCE_DIR}/src/include/*.h
-    ${PROJECT_SOURCE_DIR}/src/include/featureTracker/*.h
-    ${PROJECT_SOURCE_DIR}/src/source/estimator/*.h
-    ${PROJECT_SOURCE_DIR}/src/source/utility/*.h
+
     )
 
 find_package(Eigen3)

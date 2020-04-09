@@ -9,6 +9,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "estimator/estimator.h"
+#include "visualization/visualization.h"
 
 class rvio_ros_node
 {
@@ -61,8 +62,8 @@ void rvio_ros_node::open(ros::NodeHandle n)
 {
   estimator_obj_.initEstimator();
 
-  img1_sub_ = n.subscribe("image1_topic", 100, &rvio_ros_node::img1Callback, this);
-  img2_sub_ = n.subscribe("image2_topic", 100, &rvio_ros_node::img2Callback, this);
+  img1_sub_ = n.subscribe("/d435/camera/infra1/image_rect_raw", 100, &rvio_ros_node::img1Callback, this);
+  img2_sub_ = n.subscribe("/d435/camera/infra2/image_rect_raw", 100, &rvio_ros_node::img2Callback, this);
 }
 
 void rvio_ros_node::img1Callback(const sensor_msgs::ImageConstPtr &img_msg)
@@ -76,7 +77,6 @@ void rvio_ros_node::img1Callback(const sensor_msgs::ImageConstPtr &img_msg)
 
 void rvio_ros_node::img2Callback(const sensor_msgs::ImageConstPtr &img_msg)
 {
-
   img_buf_lock_.lock();
   img1_buf_.push(img_msg);
   img_buf_lock_.unlock();
@@ -136,6 +136,15 @@ int main(int argc, char** argv)
 
   ros::init(argc, argv, "rvio_estimator_node");
   ros::NodeHandle n;
+
+  if(argc != 2)
+  {
+    std::cout << "please provide the config file location :)" << std::endl;
+    return 1;
+  }
+  string config_file = argv[1];
+  readParameters(config_file);
+  registerPub(n);
 
   rvio_ros_node * rvio_ros_node_ptr_ = new rvio_ros_node();
   rvio_ros_node_ptr_->open(n);
