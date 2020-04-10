@@ -15,7 +15,9 @@ void estimator::initEstimator()
   input_img_cnt_ = 0;
   prev_time = -1;
   cur_time = 0;
+
   init_first_pose_flag_ = false;
+  first_imu_            = false;
 
   process_lock_.lock();
   for (int i = 0; i < NUM_OF_CAM; i++)
@@ -98,6 +100,13 @@ void estimator::processMeasurements()
       feature_buf_.pop();
       buf_lock_.unlock();
 
+      if(USE_IMU)
+      {
+          if(!init_first_pose_flag_){
+              initFirstIMUPose(acc_vector);
+          }
+      }
+
     }
 
     std::chrono::milliseconds dura(2);
@@ -165,4 +174,24 @@ void estimator::initFirstIMUPose(std::vector<pair<double, Eigen::Vector3d> > &ac
     double yaw = Utility::R2ypr(R0).x();
     R0 = Utility::ypr2R(Eigen::Vector3d{-yaw, 0, 0}) * R0;
     Rs[0] = R0;
+
+    graph_obj_.initialize(Ps[0], Rs[0], Vs[0], Bas[0], Bgs[0]);
+}
+
+void estimator::processIMU(double t, double dt, const Eigen::Vector3d &acc, const Eigen::Vector3d &ang_vel)
+{
+    if(!first_imu_)
+    {
+        first_imu_      = true;
+        prev_acc_       = acc;
+        prev_ang_vel_   = ang_vel;
+    }
+
+    //remaining integration base if(!pre_integrations[frame_count])
+
+    if(frame_count != 0)
+    {
+
+    }
+
 }

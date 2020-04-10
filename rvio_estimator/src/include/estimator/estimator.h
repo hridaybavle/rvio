@@ -10,6 +10,8 @@
 #include "featureTracker/feature_tracker.h"
 #include "visualization/visualization.h"
 
+#include "gtsam_backend/graph.h"
+
 class estimator
 {
 public:
@@ -48,19 +50,27 @@ private:
   Eigen::Vector3d        Bgs[(WINDOW_SIZE + 1)];
 
 
-  Matrix3d ric[2];
-  Vector3d tic[2];
+  Eigen::Matrix3d ric[2];
+  Eigen::Vector3d tic[2];
 
-
+  Eigen::Vector3d prev_acc_, prev_ang_vel_;
 private:
   bool IMUAvailable(double t);
   void processMeasurements();
   bool getIMUInterval(double t0, double t1, std::vector<pair<double, Eigen::Vector3d>> &acc_vector,
                       std::vector<pair<double, Eigen::Vector3d>> &ang_vel_vector);
   void initFirstIMUPose(std::vector<pair<double, Eigen::Vector3d>> &acc_vector);
+  void processIMU(double t, double dt, const Eigen::Vector3d &acc, const Eigen::Vector3d & ang_vel);
 
   int input_img_cnt_;
   double prev_time, cur_time;
   bool init_first_pose_flag_;
+  bool first_imu_;
+
+  int frame_count;
+
+  //graph
+private:
+    graph_solver graph_obj_;
 
 };
