@@ -104,9 +104,16 @@ void estimator::processMeasurements()
       {
           if(!init_first_pose_flag_){
               initFirstIMUPose(acc_vector);
+              graph_obj_.optimize();
+          }
+          else {
+              processIMU(acc_vector, ang_vel_vector);
           }
       }
-
+      process_lock_.lock();
+      processImages(feature.second, feature.first);
+      process_lock_.unlock();
+      graph_obj_.optimize();
     }
 
     std::chrono::milliseconds dura(2);
@@ -127,7 +134,7 @@ bool estimator::getIMUInterval(double t0, double t1, std::vector<pair<double, Ei
 
   if(acc_buf_.empty())
   {
-    printf("imu data empty");
+    printf("imu data empty\n");
     return false;
   }
 
@@ -175,23 +182,26 @@ void estimator::initFirstIMUPose(std::vector<pair<double, Eigen::Vector3d> > &ac
     R0 = Utility::ypr2R(Eigen::Vector3d{-yaw, 0, 0}) * R0;
     Rs[0] = R0;
 
+    //initializing the graph
     graph_obj_.initialize(Ps[0], Rs[0], Vs[0], Bas[0], Bgs[0]);
 }
 
-void estimator::processIMU(double t, double dt, const Eigen::Vector3d &acc, const Eigen::Vector3d &ang_vel)
+void estimator::processIMU(std::vector<pair<double, Eigen::Vector3d> > &acc_vector,
+                           std::vector<pair<double, Eigen::Vector3d> > &ang_vel_vector)
 {
-    if(!first_imu_)
-    {
-        first_imu_      = true;
-        prev_acc_       = acc;
-        prev_ang_vel_   = ang_vel;
-    }
+    graph_obj_.addIMUMeas(acc_vector, ang_vel_vector);
 
     //remaining integration base if(!pre_integrations[frame_count])
-
-    if(frame_count != 0)
-    {
-
-    }
-
 }
+
+void estimator::processImages(const map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> &image,
+                             const double header)
+{
+    //add over here the tracked features
+
+    //optimizing the graph
+    graph_obj_.addImageMeas(header);
+}
+
+
+

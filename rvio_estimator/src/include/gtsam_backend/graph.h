@@ -35,8 +35,13 @@ public:
   void initialize(Eigen::Vector3d Ps, Eigen::Matrix3d Rs, Eigen::Vector3d Vs,
                   Eigen::Vector3d Bas, Eigen::Vector3d Bgs);
 
+  void addIMUMeas(std::vector<pair<double, Vector3d> > acc_vec, std::vector<pair<double, Vector3d> > ang_vel_vec);
+  void addImageMeas(double timestamp);
+  void optimize();
+
 private:
   void initVariables();
+  std::mutex imu_lock_;
 
 private:
 
@@ -56,8 +61,10 @@ private:
   gtsam::ISAM2* isam2;
 
   // imu preintegration
-  // Imu Preintegration
+  std::vector<std::pair<double, Eigen::Vector3d> > acc_vec_, ang_vel_vec_;
   gtsam::PreintegratedCombinedMeasurements* preint_gtsam;
   bool set_imu_preintegration(const gtsam::State& init_state);
+  gtsam::CombinedImuFactor createIMUFactor(double update_time);
+  gtsam::State getPredictedState(gtsam::Values prev_values);
 
 };

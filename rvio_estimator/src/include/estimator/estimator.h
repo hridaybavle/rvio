@@ -60,7 +60,11 @@ private:
   bool getIMUInterval(double t0, double t1, std::vector<pair<double, Eigen::Vector3d>> &acc_vector,
                       std::vector<pair<double, Eigen::Vector3d>> &ang_vel_vector);
   void initFirstIMUPose(std::vector<pair<double, Eigen::Vector3d>> &acc_vector);
-  void processIMU(double t, double dt, const Eigen::Vector3d &acc, const Eigen::Vector3d & ang_vel);
+  void processIMU(std::vector<pair<double, Eigen::Vector3d> > &acc_vector,
+                  std::vector<pair<double, Eigen::Vector3d> > &ang_vel_vector);
+
+  void processImages(const map<int,vector<pair<int, Eigen::Matrix<double, 7, 1>>>> &image,
+                     const double header);
 
   int input_img_cnt_;
   double prev_time, cur_time;
