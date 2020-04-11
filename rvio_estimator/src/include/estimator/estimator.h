@@ -63,8 +63,11 @@ private:
   void processIMU(std::vector<pair<double, Eigen::Vector3d> > &acc_vector,
                   std::vector<pair<double, Eigen::Vector3d> > &ang_vel_vector);
 
+  void predictWithIMU(double timestamp);
   void processImages(const map<int,vector<pair<int, Eigen::Matrix<double, 7, 1>>>> &image,
                      const double header);
+  Eigen::Matrix<double, 3, 4> currLeftCamPose(Eigen::Vector3d Ps, Eigen::Matrix3d Rs);
+  Eigen::Matrix<double, 3, 4> currRightCamPose(Eigen::Vector3d Ps, Eigen::Matrix3d Rs);
 
   int input_img_cnt_;
   double prev_time, cur_time;

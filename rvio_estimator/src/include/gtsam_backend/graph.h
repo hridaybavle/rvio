@@ -8,6 +8,7 @@
 #include "estimator/feature_manager.h"
 #include "featureTracker/feature_tracker.h"
 #include "visualization/visualization.h"
+#include "estimator/parameters.h"
 
 // Graphs
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
@@ -19,12 +20,15 @@
 #include <gtsam/navigation/CombinedImuFactor.h>
 #include <gtsam/slam/ProjectionFactor.h>
 #include <gtsam/slam/SmartProjectionPoseFactor.h>
+#include <gtsam_unstable/slam/SmartStereoProjectionPoseFactor.h>
+#include <gtsam/slam/StereoFactor.h>
 
 #include "utils/State.h"
 
-using gtsam::symbol_shorthand::X; // Pose3 (x,y,z,r,p,y)
-using gtsam::symbol_shorthand::V; // Vel   (xdot,ydot,zdot)
-using gtsam::symbol_shorthand::B; // Bias  (ax,ay,az,gx,gy,gz)
+using gtsam::symbol_shorthand::X; // Pose3     (x,y,z,r,p,y)
+using gtsam::symbol_shorthand::V; // Vel       (xdot,ydot,zdot)
+using gtsam::symbol_shorthand::B; // Bias      (ax,ay,az,gx,gy,gz)
+using gtsam::symbol_shorthand::L; // Landmark  (X, Y, Z)
 
 class graph_solver
 {
@@ -32,11 +36,12 @@ public:
   graph_solver();
   ~graph_solver();
 
+
   void initialize(Eigen::Vector3d Ps, Eigen::Matrix3d Rs, Eigen::Vector3d Vs,
                   Eigen::Vector3d Bas, Eigen::Vector3d Bgs);
-
   void addIMUMeas(std::vector<pair<double, Vector3d> > acc_vec, std::vector<pair<double, Vector3d> > ang_vel_vec);
-  void addImageMeas(double timestamp);
+  void progateWithIMU(double timestamp, Eigen::Matrix3d& Rs, Eigen::Vector3d& Ps);
+  void addStereoMeas(int f_id, Eigen::Vector2d point0, Eigen::Vector2d point1, Eigen::Vector3d point3d);
   void optimize();
 
 private:
@@ -45,6 +50,7 @@ private:
 
 private:
 
+  gtsam::Cal3_S2Stereo::shared_ptr K;
   size_t cur_sc_;
   bool system_initializied_;
 

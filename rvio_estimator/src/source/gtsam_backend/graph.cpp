@@ -61,6 +61,7 @@ void graph_solver::initialize(Eigen::Vector3d Ps, Eigen::Matrix3d Rs, Eigen::Vec
     values_prev_.insert(V(cur_sc_), init_state.v());
     values_prev_.insert(B(cur_sc_), init_state.b());
 
+    K.reset(new gtsam::Cal3_S2Stereo(395.804,398.136,0,321.776,245.863, 0.50)); //fx,fy,s,u0,v0,b
     //    cur_sc_lookup_[t] = cur_sc_;
     //    timestamp_lookup_[cur_sc_] = t;
 
@@ -83,7 +84,7 @@ void graph_solver::addIMUMeas(std::vector<pair<double, Eigen::Vector3d> > acc_ve
     return;
 }
 
-void graph_solver::addImageMeas(double timestamp)
+void graph_solver::progateWithIMU(double timestamp, Eigen::Matrix3d& Rs, Eigen::Vector3d& Ps)
 {
     if(!system_initializied_)
         return;
@@ -107,8 +108,13 @@ void graph_solver::addImageMeas(double timestamp)
     values_prev_.insert(    V(cur_sc_), predicted_state.v());
     values_prev_.insert(    B(cur_sc_), predicted_state.b());
 
-    //add image features to the graph
+    //returng the Ps and Rs to the estimator
+    Ps(0) = predicted_state.pose().x();
+    Ps(1) = predicted_state.pose().y();
+    Ps(2) = predicted_state.pose().z();
+    Rs = predicted_state.pose().rotation().matrix();
 }
+
 
 void graph_solver::optimize()
 {
