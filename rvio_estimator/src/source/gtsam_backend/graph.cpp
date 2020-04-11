@@ -51,7 +51,6 @@ void graph_solver::initialize(Eigen::Vector3d Ps, Eigen::Matrix3d Rs, Eigen::Vec
     graph->add(gtsam::PriorFactor<gtsam::Vector3>(V(cur_sc_), init_state.v(),  v_noise));
     graph->add(gtsam::PriorFactor<gtsam::Bias>(   B(cur_sc_), init_state.b(), b_noise));
 
-
     //add graph values
     // Add initial state to the graph
     values_curr_.insert(    X(cur_sc_), init_state.pose());
@@ -61,7 +60,11 @@ void graph_solver::initialize(Eigen::Vector3d Ps, Eigen::Matrix3d Rs, Eigen::Vec
     values_prev_.insert(V(cur_sc_), init_state.v());
     values_prev_.insert(B(cur_sc_), init_state.b());
 
-    K.reset(new gtsam::Cal3_S2Stereo(395.804,398.136,0,321.776,245.863, 0.50)); //fx,fy,s,u0,v0,b
+    //    //fix the first pose
+    //    gtsam::Pose3 first_pose = values_curr_.at<gtsam::Pose3>(X(cur_sc_));
+    //    graph->add(gtsam::NonlinearEquality<gtsam::Pose3>(X(cur_sc_), first_pose));
+
+    K.reset(new gtsam::Cal3_S2Stereo(395.804,398.136,0,321.776,245.863, 0.050)); //fx,fy,s,u0,v0,b
     //    cur_sc_lookup_[t] = cur_sc_;
     //    timestamp_lookup_[cur_sc_] = t;
 
@@ -122,9 +125,9 @@ void graph_solver::optimize()
         return;
 
     try {
-       printf("Optimizing Graph\n");
-       gtsam::ISAM2Result result = isam2->update(*graph, values_curr_);
-       values_prev_ = isam2->calculateEstimate();
+        printf("Optimizing Graph\n");
+        gtsam::ISAM2Result result = isam2->update(*graph, values_curr_);
+        values_prev_ = isam2->calculateEstimate();
     } catch (gtsam::IndeterminantLinearSystemException &e) {
         ROS_ERROR("FORSTER2 gtsam indeterminate linear system exception!");
         std::cerr << e.what() << std::endl;
