@@ -16,6 +16,15 @@ bool graph_solver::set_imu_preintegration(const gtsam::State& init_state) {
     params->setIntegrationCovariance(gtsam::I_3x3 * 0.1);  // error committed in integrating position from velocities
     params->biasAccOmegaInt = 1e-5*gtsam::Matrix66::Identity(6,6); // error in the bias used for preintegration
 
+    gtsam::Rot3 iRb(1, 0, 0,
+                    0, 1, 0,
+                    0, 0, 1);
+
+    // body to IMU translation (meters)
+    gtsam::Point3 iTb(-0.006, 0.005, 0.012);
+
+    params->body_P_sensor = gtsam::Pose3(iRb, iTb);
+
     gtsam::Vector3 acc_bias(0.0, -0.0942015, 0.0);  // in camera frame
     gtsam::Vector3 gyro_bias(-0.00527483, -0.00757152, -0.00469968);
 
@@ -72,5 +81,15 @@ gtsam::State graph_solver::getPredictedState(gtsam::Values prev_values)
     // From this we should predict where we will be at the next time (t=K+1)
     gtsam::NavState stateK1 = preint_gtsam->predict(gtsam::NavState(stateK.pose(), stateK.v()), stateK.b());
     return gtsam::State(stateK1.pose(), stateK1.v(), stateK.b());
+}
+
+void graph_solver::resetIMUIntegration()
+{
+    if(values_prev_.exists(V(cur_sc_)))
+    {
+        preint_gtsam->resetIntegrationAndSetBias(values_prev_.at<gtsam::Bias>(B(cur_sc_)));
+    }
+
+    return;
 }
 

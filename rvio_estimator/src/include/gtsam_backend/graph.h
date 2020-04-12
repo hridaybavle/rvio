@@ -44,6 +44,8 @@ public:
   void progateWithIMU(double timestamp, Eigen::Matrix3d& Rs, Eigen::Vector3d& Ps);
   void addStereoMeas(int f_id, Eigen::Vector2d point0, Eigen::Vector2d point1, Eigen::Vector3d point3d);
   void optimize();
+  void save_graph() { graph->saveGraph(graph_path);
+                    }
 
 private:
   void initVariables();
@@ -73,5 +75,12 @@ private:
   bool set_imu_preintegration(const gtsam::State& init_state);
   gtsam::CombinedImuFactor createIMUFactor(double update_time);
   gtsam::State getPredictedState(gtsam::Values prev_values);
+  void resetIMUIntegration();
+
+  //stereo smartfactors
+  std::map<size_t, gtsam::SmartStereoProjectionPoseFactor::shared_ptr> stereo_smart_factor_;
+
+  //save graph path
+  std::ofstream graph_path;
 
 };

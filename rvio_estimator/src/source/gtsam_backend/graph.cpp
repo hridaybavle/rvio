@@ -1,7 +1,7 @@
 #include "gtsam_backend/graph.h"
 
 
-graph_solver::graph_solver()
+graph_solver::graph_solver() : graph_path("/home/hb/graph.dot")
 {
     this->graph = new gtsam::NonlinearFactorGraph();
     // ISAM2 solver
@@ -34,17 +34,23 @@ void graph_solver::initialize(Eigen::Vector3d Ps, Eigen::Matrix3d Rs, Eigen::Vec
     initVariables();
 
     Eigen::Quaterniond q(Rs);
+    gtsam::Vector3 acc_bias(0.0, -0.0942015, 0.0);  // in camera frame
+    gtsam::Vector3 gyro_bias(-0.00527483, -0.00757152, -0.00469968);
+
     gtsam::State init_state = gtsam::State(gtsam::Pose3(gtsam::Quaternion(q.w(), q.x(), q.y(),q.z()), gtsam::Vector3(Ps)),
-                                           gtsam::Vector3(Vs), gtsam::Bias(gtsam::Vector3(Bas), gtsam::Vector3(Bgs)));
+                                           gtsam::Vector3(Vs), gtsam::Bias(acc_bias, gyro_bias));
 
-
-    std::cout << "initial rotation for gtsam:" << q.x() << "," << q.y() << "," << q.z() << "," << q.w() << std::endl;
 
     auto pose_noise = gtsam::noiseModel::Diagonal::Sigmas((gtsam::Vector(6) << gtsam::Vector3::Constant(1e-4),
                                                            gtsam::Vector3::Constant(1e-4)).finished());
 
     auto v_noise = gtsam::noiseModel::Isotropic::Sigma(3, 1e-4);
     auto b_noise = gtsam::noiseModel::Isotropic::Sigma(6, 1e-4);
+
+    std::cout << "initial rotation for gtsam:" << q.x() << "," << q.y() << "," << q.z() << "," << q.w() << std::endl;
+    std::cout << "init p:" << init_state.p() << std::endl;
+    std::cout << "init v:" << init_state.v() << std::endl;
+    std::cout << "init b:" << init_state.b() << std::endl;
 
     //create graph
     graph->add(gtsam::PriorFactor<gtsam::Pose3>(X(cur_sc_), init_state.pose(), pose_noise));
@@ -115,7 +121,7 @@ void graph_solver::progateWithIMU(double timestamp, Eigen::Matrix3d& Rs, Eigen::
     Ps(0) = predicted_state.pose().x();
     Ps(1) = predicted_state.pose().y();
     Ps(2) = predicted_state.pose().z();
-    Rs = predicted_state.pose().rotation().matrix();
+    Rs    = predicted_state.pose().rotation().matrix();
 }
 
 
@@ -128,6 +134,7 @@ void graph_solver::optimize()
         printf("Optimizing Graph\n");
         gtsam::ISAM2Result result = isam2->update(*graph, values_curr_);
         values_prev_ = isam2->calculateEstimate();
+        graph->saveGraph(graph_path);
     } catch (gtsam::IndeterminantLinearSystemException &e) {
         ROS_ERROR("FORSTER2 gtsam indeterminate linear system exception!");
         std::cerr << e.what() << std::endl;
@@ -137,5 +144,7 @@ void graph_solver::optimize()
     std::cout << "Current imu propaged pose:" << values_prev_.at<gtsam::Pose3>( X(cur_sc_)) << std::endl;
     //clearing the old values
     values_curr_.clear();
+    graph->resize(0);
+    resetIMUIntegration();
 }
 

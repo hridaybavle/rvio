@@ -23,6 +23,7 @@ public:
   void inputImages(double t, const cv::Mat& img0, const cv::Mat img1);
   void setParameters();
   void inputIMU(double t, const Eigen::Vector3d linear_acc, const Eigen::Vector3d ang_vel);
+  void save_graph() { graph_obj_.save_graph();  }
 
 protected:
   FeatureTracker feature_tracker_obj_;

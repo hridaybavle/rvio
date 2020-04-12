@@ -170,6 +170,9 @@ int main(int argc, char** argv)
 
   ros::spin();
 
+//  if(!ros::ok())
+//    rvio_ros_node_ptr_->estimator_obj_.save_graph();
+
   return 0;
 
 }

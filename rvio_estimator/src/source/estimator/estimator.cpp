@@ -117,7 +117,7 @@ void estimator::processMeasurements()
             graph_obj_.optimize();
         }
 
-        std::chrono::milliseconds dura(2);
+        std::chrono::milliseconds dura(100);
         std::this_thread::sleep_for(dura);
     }
 }
@@ -207,35 +207,58 @@ void estimator::processImages(const map<int, vector<pair<int, Eigen::Matrix<doub
                               const double header)
 {
     //check for parallax
-    int frame_count =0;
-    feature_manager_.addFeatureCheckParallax(frame_count, image, time_delay_);
+    //int frame_count =0;
+    //feature_manager_.addFeatureCheckParallax(frame_count, image, time_delay_);
 
-    for (auto &it_per_id : feature_manager_.feature)
+    //for (auto &it_per_id : feature_manager_.feature)
+    for(auto it_feature_id : image)
     {
-        if(it_per_id.estimated_depth > 0)
-            continue;
+        //if(it_per_id.estimated_depth > 0)
+        //   continue;
 
-        if(it_per_id.feature_per_frame[0].is_stereo)
+        //if(it_per_id.feature_per_frame[0].is_stereo)
+        //for(int j = 0; j < image.at(i).at(0).first; ++j)
         {
-            Eigen::Matrix<double, 3, 4> left_pose, right_pose;
-            left_pose  = this->currLeftCamPose(Ps[0], Rs[0]);
-            right_pose = this->currRightCamPose(Ps[0], Rs[0]);
-
             Eigen::Vector2d point0, point1;
             Eigen::Vector3d point3d;
-            point0 = it_per_id.feature_per_frame[0].point.head(2);
-            point1 = it_per_id.feature_per_frame[0].pointRight.head(2);
 
-            feature_manager_.triangulatePoint(left_pose, right_pose, point0, point1, point3d);
+            //Eigen::Matrix<double, 3, 4> left_pose, right_pose;
+            //left_pose  = this->currLeftCamPose(Ps[0], Rs[0]);
+            //right_pose = this->currRightCamPose(Ps[0], Rs[0]);
 
-            int feature_id = it_per_id.feature_id;
+            //Eigen::Vector2d point0, point1;
+            //Eigen::Vector3d point3d;
+
+            //std::cout << "3D point x and y:" << it_per_id.feature_per_frame[0].point << std::endl;
+            //std::cout << "2D point x and y:" << it_per_id.feature_per_frame[0].uv.x() <<"," <<
+            //          it_per_id.feature_per_frame[0].uv.y() << std::endl;
+
+            //std::cout << "2D point right x and y:" << it_per_id.feature_per_frame[0].uvRight.x() <<"," <<
+            //          it_per_id.feature_per_frame[0].uvRight.y() << std::endl;
+
+            //point0 << it_per_id.feature_per_frame[0].point.x(), it_per_id.feature_per_frame[0].point.y();
+            //point1 << it_per_id.feature_per_frame[0].pointRight.x(), it_per_id.feature_per_frame[0].pointRight.y();
+
+            //feature_manager_.triangulatePoint(left_pose, right_pose, point0, point1, point3d);
+
+            int feature_id = it_feature_id.first;
+            for(auto it_cam_id : it_feature_id.second)
+            {
+                if(it_cam_id.first == 0)
+                    point0 << it_cam_id.second(0), it_cam_id.second(1);
+
+                if(it_cam_id.first == 1)
+                    point1 << it_cam_id.second(0), it_cam_id.second(1);
+
+            }
+            if(point1.size() != 0)
+                graph_obj_.addStereoMeas(feature_id, point0, point1, point3d);
+
+
             //std::cout << "feature id " << feature_id << std::endl;
             //std::cout << "3D triangulated point:" << point3d << std::endl;
-            graph_obj_.addStereoMeas(feature_id, point0, point1, point3d);
         }
     }
-
-    //optimizing the graph
 }
 
 Eigen::Matrix<double, 3, 4> estimator::currLeftCamPose(Eigen::Vector3d Ps, Eigen::Matrix3d Rs)
