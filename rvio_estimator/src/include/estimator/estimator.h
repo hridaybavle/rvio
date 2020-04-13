@@ -76,6 +76,7 @@ private:
   bool first_imu_;
 
   int frame_count;
+  int counter_;
 
   //graph
 private:

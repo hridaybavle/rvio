@@ -31,9 +31,11 @@ void graph_solver::addStereoMeas(int f_id, Eigen::Vector2d point0, Eigen::Vector
     {
        //std::cout << "adding stereo meas" << std::endl;
        auto gaussian = gtsam::noiseModel::Isotropic::Sigma(3, 0.01);
+       gtsam::Pose3 sensor_P_body = gtsam::Pose3(gtsam::Rot3(0, 0, 0, 1), gtsam::Point3(0 ,0, 0));
+
        gtsam::SmartProjectionParams params(gtsam::HESSIAN, gtsam::ZERO_ON_DEGENERACY);
        stereo_smart_factor_[L(f_id)] =  gtsam::SmartStereoProjectionPoseFactor::shared_ptr(
-                   new gtsam::SmartStereoProjectionPoseFactor(gaussian, params));
+                   new gtsam::SmartStereoProjectionPoseFactor(gaussian, params, sensor_P_body));
        graph->push_back(stereo_smart_factor_[L(f_id)]);
     }
 

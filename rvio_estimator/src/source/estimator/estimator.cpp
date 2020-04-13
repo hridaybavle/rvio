@@ -18,6 +18,7 @@ void estimator::initEstimator()
 
     init_first_pose_flag_ = false;
     first_imu_            = false;
+    counter_              = 0;
 
     process_lock_.lock();
     for (int i = 0; i < NUM_OF_CAM; i++)
@@ -114,7 +115,13 @@ void estimator::processMeasurements()
             predictWithIMU(feature.first);
             processImages(feature.second, feature.first);
             process_lock_.unlock();
-            graph_obj_.optimize();
+            counter_++;
+            //std::cout << "counter" << counter_ << std::endl;
+            if(counter_ == 10)
+            {
+                graph_obj_.optimize();
+                counter_ = 0;
+            }
         }
 
         std::chrono::milliseconds dura(2);

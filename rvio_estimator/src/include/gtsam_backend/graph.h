@@ -44,7 +44,6 @@ public:
   void progateWithIMU(double timestamp, Eigen::Matrix3d& Rs, Eigen::Vector3d& Ps);
   void addStereoMeas(int f_id, Eigen::Vector2d point0, Eigen::Vector2d point1, Eigen::Vector3d point3d);
   void optimize();
-  void calculateCurrentState(gtsam::Values prev_values);
   void save_graph() { graph->saveGraph(graph_path);
                     }
 

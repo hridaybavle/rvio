@@ -63,9 +63,9 @@ void rvio_ros_node::open(ros::NodeHandle n)
 {
   estimator_obj_.initEstimator();
 
-  imu_sub_  = n.subscribe("/vi_sensor/imu", 2000, &rvio_ros_node::imuCallback, this, ros::TransportHints().tcpNoDelay());
-  img1_sub_ = n.subscribe("/vi_sensor/left/image_raw", 100, &rvio_ros_node::img1Callback, this);
-  img2_sub_ = n.subscribe("/vi_sensor/right/image_raw", 100, &rvio_ros_node::img2Callback, this);
+  imu_sub_  = n.subscribe("/d435/camera/imu", 2000, &rvio_ros_node::imuCallback, this, ros::TransportHints().tcpNoDelay());
+  img1_sub_ = n.subscribe("/d435/camera/infra1/image_rect_raw", 100, &rvio_ros_node::img1Callback, this);
+  img2_sub_ = n.subscribe("/d435/camera/infra2/image_rect_raw", 100, &rvio_ros_node::img2Callback, this);
 }
 
 void rvio_ros_node::img1Callback(const sensor_msgs::ImageConstPtr &img_msg)

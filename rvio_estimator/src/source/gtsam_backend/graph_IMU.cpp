@@ -16,21 +16,20 @@ bool graph_solver::set_imu_preintegration(const gtsam::State& init_state) {
     params->setIntegrationCovariance(gtsam::I_3x3 * 0.1);  // error committed in integrating position from velocities
     params->biasAccOmegaInt = 1e-5*gtsam::Matrix66::Identity(6,6); // error in the bias used for preintegration
 
-    gtsam::Rot3 iRb(0.036129, -0.998727, 0.035207,
-                    0.045417, -0.033553, -0.998404,
-                    0.998315, 0.037670, 0.044147);
-
+    //    gtsam::Rot3 iRb(1, 0, 0,
+    //                    0, 1, 0,
+    //                       0, 0, 1);
     // body to IMU translation (meters)
-    gtsam::Point3 iTb(-0.006, 0.005, 0.012);
+    //gtsam::Point3 iTb(-0.006, 0.005, 0.012);
 
-    params->body_P_sensor = gtsam::Pose3(iRb, iTb);
+    //params->body_P_sensor = gtsam::Pose3(iRb, iTb);
 
     gtsam::Vector3 acc_bias(0.0, -0.0942015, 0.0);  // in camera frame
     gtsam::Vector3 gyro_bias(-0.00527483, -0.00757152, -0.00469968);
-    gtsam::imuBias::ConstantBias imu_bias = gtsam::imuBias::ConstantBias(acc_bias, gyro_bias);
+    //gtsam::imuBias::ConstantBias imu_bias = gtsam::imuBias::ConstantBias(acc_bias, gyro_bias);
 
     // Actually create the GTSAM preintegration
-    preint_gtsam = new gtsam::PreintegratedCombinedMeasurements(params, imu_bias);
+    preint_gtsam = new gtsam::PreintegratedCombinedMeasurements(params, init_state.b());
     return true;
 }
 
