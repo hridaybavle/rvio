@@ -64,3 +64,8 @@ target_link_libraries(rvio_lib
 add_executable(${PROJECT_NAME}_node ${PROJECT_SOURCE_DIR}/src/rvio_node.cpp)
 target_link_libraries(${PROJECT_NAME}_node rvio_lib)
 add_dependencies(${PROJECT_NAME}_node ${catkin_EXPORTED_TARGETS})
+
+
+add_executable(${PROJECT_NAME}_test ${PROJECT_SOURCE_DIR}/src/test/test_graph.cpp)
+target_link_libraries(${PROJECT_NAME}_test rvio_lib)
+add_dependencies(${PROJECT_NAME}_test ${catkin_EXPORTED_TARGETS})

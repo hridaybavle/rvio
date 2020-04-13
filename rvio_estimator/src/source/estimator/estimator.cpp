@@ -117,7 +117,7 @@ void estimator::processMeasurements()
             graph_obj_.optimize();
         }
 
-        std::chrono::milliseconds dura(100);
+        std::chrono::milliseconds dura(2);
         std::this_thread::sleep_for(dura);
     }
 }
@@ -251,7 +251,7 @@ void estimator::processImages(const map<int, vector<pair<int, Eigen::Matrix<doub
                     point1 << it_cam_id.second(0), it_cam_id.second(1);
 
             }
-            if(point1.size() != 0)
+            if(point0.size() != 0 && point1.size() != 0)
                 graph_obj_.addStereoMeas(feature_id, point0, point1, point3d);
 
 
@@ -282,5 +282,3 @@ Eigen::Matrix<double, 3, 4> estimator::currRightCamPose(Eigen::Vector3d Ps, Eige
 
     return right_pose;
 }
-
-

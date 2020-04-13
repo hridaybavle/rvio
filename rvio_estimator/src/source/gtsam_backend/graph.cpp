@@ -6,7 +6,7 @@ graph_solver::graph_solver() : graph_path("/home/hb/graph.dot")
     this->graph = new gtsam::NonlinearFactorGraph();
     // ISAM2 solver
     gtsam::ISAM2Params isam_params;
-    isam_params.relinearizeThreshold = 0.01;
+    isam_params.relinearizeThreshold = 0.1;
     isam_params.relinearizeSkip = 1;
     isam_params.cacheLinearizedFactors = false;
     isam_params.enableDetailedResults = true;
@@ -36,6 +36,7 @@ void graph_solver::initialize(Eigen::Vector3d Ps, Eigen::Matrix3d Rs, Eigen::Vec
     Eigen::Quaterniond q(Rs);
     gtsam::Vector3 acc_bias(0.0, -0.0942015, 0.0);  // in camera frame
     gtsam::Vector3 gyro_bias(-0.00527483, -0.00757152, -0.00469968);
+    gtsam::imuBias::ConstantBias priorImuBias = gtsam::imuBias::ConstantBias(acc_bias, gyro_bias);
 
     gtsam::State init_state = gtsam::State(gtsam::Pose3(gtsam::Quaternion(q.w(), q.x(), q.y(),q.z()), gtsam::Vector3(Ps)),
                                            gtsam::Vector3(Vs), gtsam::Bias(acc_bias, gyro_bias));
@@ -52,25 +53,29 @@ void graph_solver::initialize(Eigen::Vector3d Ps, Eigen::Matrix3d Rs, Eigen::Vec
     std::cout << "init v:" << init_state.v() << std::endl;
     std::cout << "init b:" << init_state.b() << std::endl;
 
-    //create graph
-    graph->add(gtsam::PriorFactor<gtsam::Pose3>(X(cur_sc_), init_state.pose(), pose_noise));
-    graph->add(gtsam::PriorFactor<gtsam::Vector3>(V(cur_sc_), init_state.v(),  v_noise));
-    graph->add(gtsam::PriorFactor<gtsam::Bias>(   B(cur_sc_), init_state.b(), b_noise));
-
-    //add graph values
     // Add initial state to the graph
     values_curr_.insert(    X(cur_sc_), init_state.pose());
     values_curr_.insert(    V(cur_sc_), init_state.v());
-    values_curr_.insert(    B(cur_sc_), init_state.b());
+    values_curr_.insert(    B(cur_sc_), priorImuBias);
     values_prev_.insert(X(cur_sc_), init_state.pose());
     values_prev_.insert(V(cur_sc_), init_state.v());
-    values_prev_.insert(B(cur_sc_), init_state.b());
+    values_prev_.insert(B(cur_sc_), priorImuBias);
+
+    //create graph
+    graph->add(gtsam::PriorFactor<gtsam::Pose3>(X(cur_sc_), init_state.pose(), pose_noise));
+    graph->add(gtsam::PriorFactor<gtsam::Vector3>(V(cur_sc_), init_state.v(),  v_noise));
+    graph->add(gtsam::PriorFactor<gtsam::imuBias::ConstantBias>(   B(cur_sc_), priorImuBias, b_noise));
+
+    //add graph values
 
     //    //fix the first pose
     //    gtsam::Pose3 first_pose = values_curr_.at<gtsam::Pose3>(X(cur_sc_));
     //    graph->add(gtsam::NonlinearEquality<gtsam::Pose3>(X(cur_sc_), first_pose));
 
-    K.reset(new gtsam::Cal3_S2Stereo(395.804,398.136,0,321.776,245.863, 0.050)); //fx,fy,s,u0,v0,b
+    //K.reset(new gtsam::Cal3_S2Stereo(4.481008985853343e+02,4.481008985853343e+02,0,3.765e+02,2.405e+02, 0.055)); //fx,fy,s,u0,v0,b
+    K.reset(new gtsam::Cal3_S2Stereo(822.37,822.37,0,538.73,579.10, 0.372)); //fx,fy,s,u0,v0,b
+
+
     //    cur_sc_lookup_[t] = cur_sc_;
     //    timestamp_lookup_[cur_sc_] = t;
 
